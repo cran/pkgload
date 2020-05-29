@@ -25,10 +25,9 @@ is_installed <- function(package, version = 0) {
 #'
 #' @param package The name of the suggested package
 #' @param version The version of the package
-#' @param compare The comparison operator to use to check the version
+#' @param compare The comparison operator used to check the version
 #' @keywords internal
 #' @export
-#' @keywords internal
 check_suggested <- function(package, version = NULL, compare = NA, path = inst("pkgload")) {
 
   if (is.null(version)) {
@@ -42,7 +41,7 @@ check_suggested <- function(package, version = NULL, compare = NA, path = inst("
 
   if (!is_installed(package) || !check_dep_version(package, version)) {
     msg <- paste0(sQuote(package),
-      if (is.na(version)) "" else paste0(" >= ", version),
+      if (is.na(version)) "" else paste0(" ", version),
       " must be installed for this functionality.")
 
     if (interactive()) {
@@ -104,7 +103,7 @@ extract_lang <- function(x, f, ...) {
     res <- recurse(x)[[1]]
     if (top_level_call <- identical(sys.call()[[1]], as.symbol("extract_lang"))
         && is.null(res)) {
-      warning("devtools is incompatible with the current version of R. `load_all()` may function incorrectly.")
+      warning("pkgload is incompatible with the current version of R. `load_all()` may function incorrectly.", call. = FALSE)
     }
     return(res)
   }

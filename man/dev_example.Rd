@@ -7,8 +7,16 @@
 \usage{
 dev_example(topic, quiet = FALSE)
 
-run_example(path, test = FALSE, run = FALSE, env = new.env(parent =
-  globalenv()), quiet = FALSE)
+run_example(
+  path,
+  run_donttest = FALSE,
+  run_dontrun = FALSE,
+  env = new.env(parent = globalenv()),
+  quiet = FALSE,
+  macros = NULL,
+  run,
+  test
+)
 }
 \arguments{
 \item{topic}{Name or topic (or name of Rd) file to run examples for}
@@ -17,14 +25,18 @@ run_example(path, test = FALSE, run = FALSE, env = new.env(parent =
 
 \item{path}{Path to \code{.Rd} file}
 
-\item{test}{if \code{TRUE}, code in \code{\\donttest{}} will be commented
-out. If \code{FALSE}, code in \code{\\testonly{}} will be commented out. This
-parameter is only used in R 3.2 and greater.}
-
-\item{run}{if \code{TRUE}, code in \code{\\dontrun{}} will be commented
+\item{run_donttest}{if \code{TRUE}, do run \verb{\donttest} sections in the Rd files.
 out.}
 
+\item{run_dontrun}{if \code{TRUE}, do run \verb{\dontrun} sections in the Rd files.}
+
 \item{env}{Environment in which code will be run.}
+
+\item{macros}{Custom macros to use to parse the \code{.Rd} file. See the
+\code{macros} argument of \code{\link[tools:parse_Rd]{tools::parse_Rd()}}. If \code{NULL}, then the
+\code{\link[tools:Rd2ex]{tools::Rd2ex()}} (and \code{\link[tools:parse_Rd]{tools::parse_Rd()}}) default is used.}
+
+\item{run, test}{Deprecated, see \code{run_dontrun} and \code{run_donttest} above.}
 }
 \description{
 \code{dev_example} is a replacement for \code{example}. \code{run_example}

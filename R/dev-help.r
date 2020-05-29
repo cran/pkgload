@@ -44,6 +44,14 @@ dev_help <- function(topic,
   )
 }
 
+load_rd_macros <- function(dir) {
+  macros <- tools::loadPkgRdMacros(dir)
+  macros <- tools::loadRdMacros(
+    file.path(R.home("share"), "Rd", "macros", "system.Rd"),
+    macros = macros
+  )
+}
+
 #' @export
 print.dev_topic <- function(x, ...) {
   message("Rendering development documentation for '", x$topic, "'")
@@ -51,8 +59,10 @@ print.dev_topic <- function(x, ...) {
   type <- match.arg(x$type %||% "text", c("text", "html"))
   out_path <- paste(tempfile("Rtxt"), type, sep = ".")
 
+  macros <- load_rd_macros(dirname(dirname(x$path)))
+
   if (type == "text") {
-    tools::Rd2txt(x$path, out = out_path, package = x$pkg, stages = x$stage)
+    tools::Rd2txt(x$path, out = out_path, package = x$pkg, stages = x$stage, macros = macros)
     file.show(out_path, title = paste(x$pkg, basename(x$path), sep = ":"))
   } else if (type == "html") {
     if (rstudioapi::hasFun("previewRd")) {
@@ -60,7 +70,7 @@ print.dev_topic <- function(x, ...) {
       return(invisible())
     }
     tools::Rd2HTML(x$path, out = out_path, package = x$pkg, stages = x$stage,
-      no_links = TRUE)
+      no_links = TRUE, macros = macros)
 
     css_path <- file.path(tempdir(), "R.css")
     if (!file.exists(css_path)) {
@@ -88,7 +98,6 @@ print.dev_topic <- function(x, ...) {
 #' `package` is specified, then it will search for help in devtools-loaded
 #' packages or regular packages, as appropriate.
 #'
-#' @inheritParams utils::help utils::`?`
 #' @param topic A name or character string specifying the help topic.
 #' @param package A name or character string specifying the package in which
 #'   to search for the help topic. If NULL, search all packages.

@@ -17,5 +17,19 @@ test_that("helpers are available after load_all", {
   # object definde in helper, referencing lazy data object mtcars2
   expect_equal(head_mtcars, head(mtcars2))
 
+  # object defined in helper using explicitly qualified package name
+  expect_equal(helper_baz, baz)
+
   unload("testLoadHelpers")
+})
+
+test_that("warn_if_conflicts works", {
+  # no warning if no intersection
+  expect_warning(warn_if_conflicts("pkg", c("foo"), c("bar")), NA)
+
+  # warning if an intersection
+
+  withr::with_options(c(crayon.enabled = FALSE),
+    expect_warning(warn_if_conflicts("pkg", c("foo"), c("foo", "bar")), "foo().*masks.*pkg::foo()")
+  )
 })

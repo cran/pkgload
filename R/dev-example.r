@@ -3,7 +3,6 @@
 #' `dev_example` is a replacement for `example`. `run_example`
 #' is a low-level function that takes a path to an Rd file.
 #'
-#' @inheritParams run_examples
 #' @param topic Name or topic (or name of Rd) file to run examples for
 #' @param quiet If `TRUE`, does not echo code to console.
 #' @export
@@ -20,22 +19,32 @@
 dev_example <- function(topic, quiet = FALSE) {
   topic <- dev_help(topic)
 
-  load_all(topic$pkg, quiet = quiet)
   run_example(topic$path, quiet = quiet)
 }
 
 #' @rdname dev_example
 #' @export
 #' @param path Path to `.Rd` file
-#' @param test if `TRUE`, code in \code{\\donttest{}} will be commented
-#'   out. If `FALSE`, code in \code{\\testonly{}} will be commented out. This
-#'   parameter is only used in R 3.2 and greater.
-#' @param run if `TRUE`, code in \code{\\dontrun{}} will be commented
+#' @param run_dontrun if `TRUE`, do run `\dontrun` sections in the Rd files.
+#' @param run_donttest if `TRUE`, do run `\donttest` sections in the Rd files.
 #'   out.
 #' @param env Environment in which code will be run.
-run_example <- function(path, test = FALSE, run = FALSE,
+#' @param macros Custom macros to use to parse the `.Rd` file. See the
+#'   `macros` argument of [tools::parse_Rd()]. If `NULL`, then the
+#'   [tools::Rd2ex()] (and [tools::parse_Rd()]) default is used.
+#' @param run,test Deprecated, see `run_dontrun` and `run_donttest` above.
+run_example <- function(path, run_donttest = FALSE, run_dontrun = FALSE,
                         env = new.env(parent = globalenv()),
-                        quiet = FALSE) {
+                        quiet = FALSE, macros = NULL, run, test) {
+
+  if (!missing(run)) {
+    warning("`run_example(run=)` is deprecated, please use `run_example(run_dontrun=)` instead", call. = FALSE)
+    run_dontrun <- run
+  }
+  if (!missing(test)) {
+    warning("`run_example(test=)` is deprecated, please use `run_example(run_donttest=)` instead", call. = FALSE)
+    run_donttest <- test
+  }
 
   if (!file.exists(path)) {
     stop("'", path, "' does not exist", call. = FALSE)
@@ -43,12 +52,23 @@ run_example <- function(path, test = FALSE, run = FALSE,
 
   tmp <- tempfile(fileext = ".R")
 
-  if (getRversion() < "3.2") {
-    # R 3.1 and earlier did not have commentDonttest
-    tools::Rd2ex(path, out = tmp, commentDontrun = !run)
+  if (is.null(macros)) {
+    tools::Rd2ex(
+      path,
+      out = tmp,
+      commentDontrun = !run_dontrun,
+      commentDonttest = !run_donttest
+    )
   } else {
-    tools::Rd2ex(path, out = tmp, commentDontrun = !run, commentDonttest = !test)
+    tools::Rd2ex(
+      path,
+      out = tmp,
+      commentDontrun = !run_dontrun,
+      commentDonttest = !run_donttest,
+      macros = macros
+    )
   }
+
   if (file.exists(tmp)) {
     source(tmp, echo = !quiet, local = env, max.deparse.length = Inf)
   }
