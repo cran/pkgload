@@ -154,6 +154,7 @@ onload_assign("add_classes_to_exports",
     }
     make_function(alist(ns =, package =, exports =, nsInfo =),
       call("{",
+        quote(lev <- 0L),
         quote(hasS4m <- .hasS4MetaData(ns)),
         extract_lang(
           f = comp_lang,
@@ -192,7 +193,7 @@ register_s3 <- function(path = ".") {
   nsInfo <- parse_ns_file(path)
 
   # Adapted from loadNamespace
-  registerS3methods(nsInfo$S3methods, package, ns_env(package))
+  try(registerS3methods(nsInfo$S3methods, package, ns_env(package)))
 }
 
 
@@ -240,7 +241,26 @@ unregister_namespace <- function(name = NULL) {
   if (!(name %in% loadedNamespaces()))
     stop(name, " is not a registered namespace.")
 
+  # This is a hack to work around unloading pkgload itself. The unloading
+  # process normally makes other pkgload functions inaccessible,
+  # resulting in "Error in unload(pkg) : internal error -3 in R_decompress1".
+  # If we simply force them first, then they will remain available for use
+  # later. This also makes it possible to use `load_all()` on pkgload itself.
+  if (name == "pkgload") {
+    eapply(ns_env(name), force, all.names = TRUE)
+  }
+
   # Remove the item from the registry
   do.call(rm, args = list(name, envir = ns_registry()))
   invisible()
+}
+
+unregister_methods <- function(package) {
+  # Unloading S3 methods manually avoids lazy-load errors when the new
+  # package is loaded overtop the old one. It also prevents removed
+  # methods from staying registered.
+  s3_unregister(package)
+
+  # S4 classes that were created by the package need to be removed in a special way.
+  remove_s4_classes(package)
 }

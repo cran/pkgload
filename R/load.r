@@ -108,7 +108,7 @@ load_all <- function(path = ".", reset = TRUE, compile = NA,
   package <- pkg_name(path)
   description <- pkg_desc(path)
 
-  if (!quiet) message("Loading ", package)
+  if (!quiet) cli::cli_alert_info("Loading {.pkg {package}}")
 
   if (package == "compiler") {
     # Disable JIT while loading the compiler package to avoid interference
@@ -119,41 +119,14 @@ load_all <- function(path = ".", reset = TRUE, compile = NA,
     on.exit(compiler::enableJIT(oldEnabled), TRUE)
   }
 
-  # Forcing all of the promises for the loaded namespace now will avoid lazy-load
-  # errors when the new package is loaded overtop the old one.
-  #
-  # Reloading devtools is a special case. Normally, objects in the
-  # namespace become inaccessible if the namespace is unloaded before the
-  # object has been accessed. Instead we force the object so they will still be
-  # accessible.
-  if (is_loaded(package)) {
-    eapply(ns_env(package), force, all.names = TRUE)
-  }
-
   # Check description file is ok
   check <- ("tools" %:::% ".check_package_description")(
     package_file("DESCRIPTION", path = path))
 
   if (length(check) > 0) {
     msg <- utils::capture.output(("tools" %:::% "print.check_package_description")(check))
-    message("Invalid DESCRIPTION:\n", paste(msg, collapse = "\n"))
-  }
-
-  ## The unload() has to come before unload_dll(), for packages with
-  ## compiled code, becauase they might crash of objects still use the
-  ## DLL's memory.
-  if (reset) {
-    clear_cache()
-    if (is_loaded(package)) unload(package, quiet = quiet)
-  }
-
-  if (is_loaded(package) && is.null(dev_meta(package))) {
-    # If installed version of package loaded, unload it
-    # (and also the DLLs)
-    unload(package, quiet = quiet)
-  } else {
-    # Unload only DLLs
-    unload_dll(package)
+    cli::cli_alert_danger("Invalid DESCRIPTION")
+    cli::cli_code(msg)
   }
 
   # Compile dll if requested
@@ -171,16 +144,21 @@ load_all <- function(path = ".", reset = TRUE, compile = NA,
     stop("`compile` must be a logical vector of length 1", call. = FALSE)
   }
 
-  # If installed version of package loaded, unload it, again
-  # (needed for dependencies of pkgbuild)
-  if (is_loaded(package) && is.null(dev_meta(package))) {
-    unload(package, quiet = quiet)
+  if (reset) {
+    clear_cache()
+
+    # Remove package from known namespaces. We don't unload it to allow
+    # safe usage of dangling references.
+    if (is_loaded(package)) {
+      unload_pkg_env(package)
+      unregister_methods(package)
+      unregister_namespace(package)
+    }
   }
 
-  # Set up the namespace environment ----------------------------------
-  # This mimics the procedure in loadNamespace
-
-  if (!is_loaded(package)) create_ns_env(path)
+  if (!is_loaded(package)) {
+    create_ns_env(path)
+  }
 
   out <- list(env = ns_env(package))
 
@@ -202,7 +180,7 @@ load_all <- function(path = ".", reset = TRUE, compile = NA,
 
   # attach testthat to the search path
   if (isTRUE(attach_testthat) && package != "testthat") {
-    ("base" %:::% "library")("testthat")
+    ("base" %:::% "library")("testthat", warn.conflicts = FALSE)
   }
 
   # Run namespace load hooks
@@ -240,9 +218,6 @@ load_all <- function(path = ".", reset = TRUE, compile = NA,
 
   # Replace help and ? in utils package environment
   insert_global_shims()
-
-  # Propagate new definitions to namespace imports of loaded packages.
-  propagate_ns(package)
 
   if (isTRUE(warn_conflicts)) {
     warn_if_conflicts(package, getNamespaceExports(out$env), names(globalenv()))
@@ -328,23 +303,4 @@ find_test_dir <- function(path) {
   if (dir.exists(inst)) return(inst)
 
   stop("No testthat directories found in ", path, call. = FALSE)
-}
-
-propagate_ns <- function(package) {
-  for (ns in loadedNamespaces()) {
-    imports <- getNamespaceImports(ns)
-    if (package %in% names(imports)) {
-      env <- ns_env(ns)
-      lapply(ls(env, all.names = TRUE), unlockBinding, env)
-
-      imp <- imports_env(ns)
-      lapply(ls(imp, all.names = TRUE), unlockBinding, imp)
-
-      unlock_environment(env)
-      unlock_environment(imp)
-      update_imports(ns)
-      lockEnvironment(env)
-      lockEnvironment(imp)
-    }
-  }
 }

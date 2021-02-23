@@ -8,7 +8,7 @@
 #' but there may be others.  Similarly, automated DLL unloading is best tested
 #' for simple scenarios (particularly with `useDynLib(pkgname)` and may
 #' fail in other cases. If you do encounter a failure, please file a bug report
-#' at \url{http://github.com/r-lib/pkgload/issues}.
+#' at \url{https://github.com/r-lib/pkgload/issues}.
 #'
 #' @inheritParams ns_env
 #' @param quiet if `TRUE` suppresses output from this function.
@@ -40,42 +40,31 @@ unload <- function(package = pkg_name(), quiet = FALSE) {
     }
   }
 
-  # This is a hack to work around unloading devtools itself. The unloading
-  # process normally makes other devtools functions inaccessible,
-  # resulting in "Error in unload(pkg) : internal error -3 in R_decompress1".
-  # If we simply force them first, then they will remain available for use
-  # later.
-  if (package == "pkgload") {
-    eapply(ns_env(package), force, all.names = TRUE)
-  }
-
-  # S4 classes that were created by the package need to be removed in a special way.
-  remove_s4_classes(package)
-
-  if (package %in% loadedNamespaces()) {
-    # unloadNamespace will throw an error if it has trouble unloading.
-    # This can happen when there's another package that depends on the
-    # namespace.
-    # unloadNamespace will also detach the package if it's attached.
-    #
-    # unloadNamespace calls onUnload hook and .onUnload
-    try(unloadNamespace(package), silent = TRUE)
-
-  } else {
+  if (!package %in% loadedNamespaces()) {
     stop("Package ", package, " not found in loaded packages or namespaces")
   }
 
-  # Sometimes the namespace won't unload with detach(), like when there's
-  # another package that depends on it. If it's still around, force it
-  # to go away.
-  # loadedNamespaces() and unloadNamespace() often don't work here
-  # because things can be in a weird state.
-  if (!is.null(.getNamespace(package))) {
+  unregister_methods(package)
+
+  # unloadNamespace calls onUnload hook and .onUnload, and detaches the
+  # package if it's attached. It will fail if a loaded package needs it.
+  unloaded <- tryCatch({
+    unloadNamespace(package)
+    TRUE
+  }, error = function(e) FALSE)
+
+  if (!unloaded) {
     if (!quiet) {
-      message("unloadNamespace(\"", package,
-        "\") not successful, probably because another loaded package depends on it. ",
-        "Forcing unload. If you encounter problems, please restart R.")
+      cli::cli_alert_danger("unloadNamespace(\"{package}\") failed because another loaded package needs it")
+      cli::cli_alert_info("Forcing unload. If you encounter problems, please restart R.")
     }
+
+    # unloadNamespace() failed before we get to the detach, so need to
+    # manually detach
+    unload_pkg_env(package)
+
+    # Can't use loadedNamespaces() and unloadNamespace() here because
+    # things can be in a weird state.
     unregister_namespace(package)
   }
 
@@ -85,6 +74,13 @@ unload <- function(package = pkg_name(), quiet = FALSE) {
   # Do this after detach, so that packages that have an .onUnload function
   # which unloads DLLs (like MASS) won't try to unload the DLL twice.
   unload_dll(package)
+}
+
+unload_pkg_env <- function(package) {
+  if (is_attached(package)) {
+    pos <- which(pkg_env_name(package) == search())
+    suppressWarnings(detach(pos = pos, force = TRUE))
+  }
 }
 
 # This unloads dlls loaded by either library() or load_all()
@@ -112,4 +108,37 @@ unload_dll <- function(package) {
   .dynLibs(libs[!(libs %in% pkglibs)])
 
   invisible()
+}
+
+s3_unregister <- function(package) {
+  ns <- ns_env(package)
+
+  # If the package is loaded, but not installed this will fail, so we bail out in that case.
+  ns_defs <- suppressWarnings(try(parse_ns_file(system.file(package = package)), silent = TRUE))
+  if (inherits(ns_defs, "try-error")) {
+    return()
+  }
+  methods <- ns_defs$S3methods[, 1:2, drop = FALSE]
+
+  for (i in seq_len(nrow(methods))) {
+    method <- methods[i, , drop = FALSE]
+
+    generic <- env_get(ns, method[[1]], inherit = TRUE, default = NULL)
+    if (is_null(generic)) {
+      next
+    }
+
+    generic_ns <- topenv(fn_env(generic))
+    if (!is_namespace(generic_ns)) {
+      next
+    }
+
+    table <- generic_ns$.__S3MethodsTable__.
+    if (!is_environment(table)) {
+      next
+    }
+
+    nm <- paste0(method, collapse = ".")
+    env_unbind(table, nm)
+  }
 }

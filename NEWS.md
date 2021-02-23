@@ -1,3 +1,38 @@
+# pkgload 1.2.0
+
+* Fix test failure in R 4.1 with regards to S4 method registration
+
+* `load_all()` now preserves existing namespaces in working order. In
+  particular, it doesn't unload the package's shared library and keeps
+  it loaded instead. When reloading, a copy of the SO for the new
+  namespace is loaded from a temporary location. These temporary SOs
+  are only unloaded on GC and deleted from their temporary location
+  via a weak reference attached to the namespace.
+
+  This mechanism ensures that lingering references to the namespace
+  keep working as expected. Consequently the namespace
+  propagation routine that was added to pkgload as a workaround has
+  been removed.
+
+  Note that `.Call()` invocations that pass a string symbol rather
+  than a structured symbol may keep crashing, because R will look into
+  the most recently loaded SO of a given name. Since symbol
+  registration is now the norm, we don't expect this to cause much
+  trouble.
+
+* `load_all()` no longer forces all bindings of a namespace to avoid
+  lazy-load errors. Instead, it removes exported S3 methods from the
+  relevant tables.
+
+  - This improves the loading behaviour with packages that define
+    objects in their namespaces lazily (e.g. with `delayedAssign()`).
+
+  - This also makes `load_all()` more predictable after a method has
+    been removed from the package. It is now actually removed from the
+    generic table. It would previously linger until R was restarted.
+
+* If `load_all()` attaches testthat, it automatically suppresses conflicts.
+
 # pkgload 1.1.0
 
 * `dev_example()` now works after removing an inconsistent call to `load_all()` (@riccardoporreca, #122).

@@ -49,12 +49,16 @@ load_imports <- function(path = ".") {
   deps <- description$get_deps()
   imports <- deps[deps$type == "Imports", ]
 
-  if (length(imports) == 0) return(invisible())
+  if (length(imports) == 0) {
+    return(invisible())
+  }
 
   # If we've already loaded imports, don't load again (until load_all
   # is run with reset=TRUE). This is to avoid warnings when running
   # process_imports()
-  if (length(ls(imports_env(package))) > 0) return(invisible(imports))
+  if (length(ls(envir = imports_env(package))) > 0) {
+    return(invisible(imports))
+  }
 
   res <- mapply(check_dep_version, imports$package, imports$version)
   abort_for_missing_packages(res, imports$package)
@@ -120,26 +124,3 @@ onload_assign("process_imports", {
 
   process_imports
 })
-
-onload_assign("update_imports", {
-  update_imports <- function(package) {
-    vI <- ("tools" %:::% ".split_dependencies")(utils::packageDescription(package)[["Imports"]])
-    nsInfo <- parse_ns_file(system.file("NAMESPACE", package = package))
-    ns <- ns_env(package)
-    lib.loc <- NULL
-
-    suppressWarnings({
-      !! load_namespace_for1()
-      !! load_namespace_for2()
-      !! load_namespace_for3()
-    })
-  }
-
-  update_imports <- expr_interp(update_imports)
-  fn_env(update_imports) <- rlang::ns_env("pkgload")
-
-  update_imports
-})
-
-#' @useDynLib pkgload, .registration = TRUE
-NULL

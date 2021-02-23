@@ -45,7 +45,8 @@ check_suggested <- function(package, version = NULL, compare = NA, path = inst("
       " must be installed for this functionality.")
 
     if (interactive()) {
-      message(msg, "\nWould you like to install it?")
+      cli::cli_alert_info(msg)
+      cli::cli_alert_danger("Would you like to install it?")
       if (utils::menu(c("Yes", "No")) == 1) {
         utils::install.packages(package)
       } else {
@@ -178,8 +179,4 @@ last <- function(x) utils::tail(x, n = 1L)
 
 single_quote <- function(x) {
   encodeString(x, quote = "'")
-}
-
-unlock_environment <- function(x) {
-  .Call(unlock_environment_, x)
 }
