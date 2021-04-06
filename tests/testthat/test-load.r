@@ -23,15 +23,35 @@ test_that("helpers are available after load_all", {
   unload("testLoadHelpers")
 })
 
-test_that("warn_if_conflicts works", {
-  # no warning if no intersection
-  expect_warning(warn_if_conflicts("pkg", c("foo"), c("bar")), NA)
+test_that("warn_if_conflicts warns for conflicts and both objects are functions", {
+  e1 <- new.env(parent = emptyenv())
+  e2 <- new.env(parent = emptyenv())
 
-  # warning if an intersection
+  e1$foo <- function() "foo"
+  e2$bar <- function() "bar"
 
+  # no warning if no conflicts
+  expect_warning(warn_if_conflicts("pkg", e1, e2), NA)
+
+  e2$foo <- function() "foo2"
+
+  # warning for a conflict
   withr::with_options(c(crayon.enabled = FALSE),
-    expect_warning(warn_if_conflicts("pkg", c("foo"), c("foo", "bar")), "foo().*masks.*pkg::foo()")
+    expect_warning(
+      warn_if_conflicts("pkg", e1, e2),
+      "foo().*masks.*pkg::foo()"
+    )
   )
+})
+
+test_that("warn_if_conflicts does not warn for conflicts when one of the objects is not a function", {
+  e1 <- new.env(parent = emptyenv())
+  e2 <- new.env(parent = emptyenv())
+
+  e1$foo <- function() "foo"
+  e2$foo <- "foo"
+
+  expect_warning(warn_if_conflicts("pkg", e1, e2), NA)
 })
 
 test_that("loading multiple times doesn't force bindings", {
@@ -54,6 +74,20 @@ test_that("reloading a package unloads deleted S3 methods", {
   load_all("testS3removed")
   expect_equal(as.character(x), "registered")
 
+  # Hold a reference to the generic in the currently loaded namespace
+  stale_generic <- testS3removed::my_generic
+
   load_all("testS3removed2")
   expect_equal(as.character(x), character())
+
+  # Still works because we don't unregister methods for the package
+  # being unloaded (r-lib/vctrs#1341)
+  expect_equal(stale_generic(x), "registered")
 })
+
+test_that("load_all() errors when no DESCRIPTION found", {
+  withr::with_tempdir({
+    expect_error(load_all(), class = "pkgload_no_desc")
+  })
+})
+

@@ -54,11 +54,6 @@ unload <- function(package = pkg_name(), quiet = FALSE) {
   }, error = function(e) FALSE)
 
   if (!unloaded) {
-    if (!quiet) {
-      cli::cli_alert_danger("unloadNamespace(\"{package}\") failed because another loaded package needs it")
-      cli::cli_alert_info("Forcing unload. If you encounter problems, please restart R.")
-    }
-
     # unloadNamespace() failed before we get to the detach, so need to
     # manually detach
     unload_pkg_env(package)
@@ -130,6 +125,13 @@ s3_unregister <- function(package) {
 
     generic_ns <- topenv(fn_env(generic))
     if (!is_namespace(generic_ns)) {
+      next
+    }
+
+    # Don't remove methods for generics defined in the namespace being
+    # unloaded. The stale namespace should still work as much as
+    # possible.
+    if (is_string(ns_env_name(generic_ns), package)) {
       next
     }
 

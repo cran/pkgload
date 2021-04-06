@@ -2,7 +2,7 @@
 % Please edit documentation in R/load.r
 \name{load_all}
 \alias{load_all}
-\title{Load complete package.}
+\title{Load complete package}
 \usage{
 load_all(
   path = ".",
@@ -21,10 +21,10 @@ load_all(
 \item{path}{Path to a package, or within a package.}
 
 \item{reset}{clear package environment and reset file cache before loading
-any pieces of the package. This is equivalent to running
-\code{\link[=unload]{unload()}} and is the default. Use \code{reset = FALSE} may be
-faster for large code bases, but is a significantly less accurate
-approximation.}
+any pieces of the package. This largely equivalent to running
+\code{\link[=unload]{unload()}}, however the old namespaces are not completely removed and no
+\code{.onUnload()} hooks are called. Use \code{reset = FALSE} may be faster for
+large code bases, but is a significantly less accurate approximation.}
 
 \item{compile}{If \code{TRUE} always recompiles the package; if \code{NA}
 recompiles if needed (as determined by \code{\link[pkgbuild:needs_compile]{pkgbuild::needs_compile()}});
@@ -49,11 +49,12 @@ which more closely mimics the environment within test files.}
 present. This is equivalent to running \code{\link[pkgbuild:clean_dll]{pkgbuild::clean_dll()}} before
 \code{load_all}}
 
-\item{warn_conflicts}{If \code{TRUE}, issue a warning if there are conflicts
-between the exported functions and functions in the global namespace. This
-most commonly happens when you accidently source an R file rather than using
-\code{load_all()}, or define a function directly in the R console, and can be
-frustrating to debug.}
+\item{warn_conflicts}{If \code{TRUE}, issues a warning if a function in the global
+environment masks a function in the package. This can happen when you
+accidentally source a \code{.R} file, rather than using \code{load_all()}, or if you
+define a function directly in the R console. This is frustrating to debug,
+as it feels like the changes you make to the package source aren't having
+the expected effect.}
 }
 \description{
 \code{load_all} loads a package. It roughly simulates what happens
@@ -71,7 +72,7 @@ environment that behaves like a regular package namespace. See
 below and \code{\link[=load_code]{load_code()}} for more details.
 
 \item Compiles any C, C++, or Fortran code in the \verb{src/} directory
-and connects the generated DLL into R. See \code{\link[=compile_dll]{compile_dll()}}
+and connects the generated DLL into R. See \code{pkgload::compile_dll()}
 for more details.
 
 \item Runs \code{.onAttach()}, \code{.onLoad()} and \code{.onUnload()}

@@ -1,4 +1,4 @@
-#' Load complete package.
+#' Load complete package
 #'
 #' `load_all` loads a package. It roughly simulates what happens
 #' when a package is installed and loaded with [library()].
@@ -14,7 +14,7 @@
 #'     below and [load_code()] for more details.
 #'
 #'   \item Compiles any C, C++, or Fortran code in the `src/` directory
-#'     and connects the generated DLL into R. See [compile_dll()]
+#'     and connects the generated DLL into R. See `pkgload::compile_dll()`
 #'     for more details.
 #'
 #'   \item Runs `.onAttach()`, `.onLoad()` and `.onUnload()`
@@ -58,10 +58,10 @@
 #'
 #' @param path Path to a package, or within a package.
 #' @param reset clear package environment and reset file cache before loading
-#'   any pieces of the package. This is equivalent to running
-#'   [unload()] and is the default. Use `reset = FALSE` may be
-#'   faster for large code bases, but is a significantly less accurate
-#'   approximation.
+#'   any pieces of the package. This largely equivalent to running
+#'   [unload()], however the old namespaces are not completely removed and no
+#'   `.onUnload()` hooks are called. Use `reset = FALSE` may be faster for
+#'   large code bases, but is a significantly less accurate approximation.
 #' @param compile If `TRUE` always recompiles the package; if `NA`
 #'   recompiles if needed (as determined by [pkgbuild::needs_compile()]);
 #'   if `FALSE`, never recompiles.
@@ -78,11 +78,12 @@
 #' @param recompile DEPRECATED. force a recompile of DLL from source code, if
 #'   present. This is equivalent to running [pkgbuild::clean_dll()] before
 #'   `load_all`
-#' @param warn_conflicts If `TRUE`, issue a warning if there are conflicts
-#'   between the exported functions and functions in the global namespace. This
-#'   most commonly happens when you accidently source an R file rather than using
-#'   `load_all()`, or define a function directly in the R console, and can be
-#'   frustrating to debug.
+#' @param warn_conflicts If `TRUE`, issues a warning if a function in the global
+#'   environment masks a function in the package. This can happen when you
+#'   accidentally source a `.R` file, rather than using `load_all()`, or if you
+#'   define a function directly in the R console. This is frustrating to debug,
+#'   as it feels like the changes you make to the package source aren't having
+#'   the expected effect.
 #' @keywords programming
 #' @examples
 #' \dontrun{
@@ -119,24 +120,19 @@ load_all <- function(path = ".", reset = TRUE, compile = NA,
     on.exit(compiler::enableJIT(oldEnabled), TRUE)
   }
 
-  # Check description file is ok
-  check <- ("tools" %:::% ".check_package_description")(
-    package_file("DESCRIPTION", path = path))
-
-  if (length(check) > 0) {
-    msg <- utils::capture.output(("tools" %:::% "print.check_package_description")(check))
-    cli::cli_alert_danger("Invalid DESCRIPTION")
-    cli::cli_code(msg)
-  }
-
-  # Compile dll if requested
-  if (missing(compile) && !missing(recompile)) {
+  # Compile dll if requested, we don't ever need to do this if a package doesn't
+  # have a src/ directory
+  if (!dir.exists(file.path(path, "src"))) {
+    compile <- FALSE
+  } else if (missing(compile) && !missing(recompile)) {
     compile <- if (isTRUE(recompile)) TRUE else NA
   }
 
   if (isTRUE(compile)) {
+    rlang::check_installed("pkgbuild", reason = "to compile packages with a `src/` directory.")
     pkgbuild::compile_dll(path, force = TRUE, quiet = quiet)
   } else if (identical(compile, NA)) {
+    rlang::check_installed("pkgbuild", reason = "to compile packages with a `src/` directory.")
     pkgbuild::compile_dll(path, quiet = quiet)
   } else if (identical(compile, FALSE)) {
     # don't compile
@@ -220,14 +216,32 @@ load_all <- function(path = ".", reset = TRUE, compile = NA,
   insert_global_shims()
 
   if (isTRUE(warn_conflicts)) {
-    warn_if_conflicts(package, getNamespaceExports(out$env), names(globalenv()))
+    warn_if_conflicts(
+      package,
+      out$env,
+      globalenv()
+    )
   }
 
   invisible(out)
 }
 
-warn_if_conflicts <- function(package, nms1, nms2) {
+is_function_in_environment <- function(name, env) {
+  vapply(name, exists, logical(1), where = env, mode = "function", inherits = FALSE)
+}
+
+warn_if_conflicts <- function(package, env1, env2) {
+  nms1 <- get_exports(env1)
+  nms2 <- get_exports(env2)
+
   both <- sort(intersect(nms1, nms2))
+
+  # Verify are functions in both environments
+  both <- both[
+    is_function_in_environment(both, env1) &
+    is_function_in_environment(both, env2)
+  ]
+
   if (length(both) == 0) {
     return(invisible())
   }
@@ -256,6 +270,15 @@ warn_if_conflicts <- function(package, nms1, nms2) {
     ),
     .subclass = "pkgload::conflict"
   )
+}
+
+get_exports <- function(ns) {
+  if (isNamespace(ns)) {
+    nms <- getNamespaceExports(ns)
+  } else {
+    nms <- names(ns)
+  }
+  nms
 }
 
 conflict_bullets <- function(package, both) {
@@ -292,7 +315,7 @@ uses_testthat <- function(path = ".") {
     package_file("tests", "testthat", path = path)
   )
 
-  any(dir.exists(paths))
+  any(dir.exists(paths)) && requireNamespace("testthat", quietly = TRUE)
 }
 
 find_test_dir <- function(path) {
