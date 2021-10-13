@@ -54,16 +54,19 @@ test_that("warn_if_conflicts does not warn for conflicts when one of the objects
   expect_warning(warn_if_conflicts("pkg", e1, e2), NA)
 })
 
-test_that("loading multiple times doesn't force bindings", {
+test_that("unloading or reloading forces bindings", {
   forced <- FALSE
 
   withCallingHandlers(
     forced = function(...) forced <<- TRUE, {
+      # Allow running test interactively
+      on.exit(unload("testLoadLazy"))
+
       load_all("testLoadLazy")
       expect_false(forced)
 
       load_all("testLoadLazy")
-      expect_false(forced)
+      expect_true(forced)
     }
   )
 })
@@ -85,9 +88,51 @@ test_that("reloading a package unloads deleted S3 methods", {
   expect_equal(stale_generic(x), "registered")
 })
 
+test_that("reloading a package reloads foreign methods (#163)", {
+  x <- structure(list(), class = "foreign_foobar")
+
+  load_all("testS3removed")
+
+  registerS3method(
+    "my_generic",
+    "foreign_foobar",
+    function(...) "OK",
+    envir = ns_env("testS3removed")
+  )
+  expect_equal(my_generic(x), "OK")
+
+  load_all("testS3removed")
+  expect_equal(my_generic(x), "OK")
+})
+
+test_that("reloading a package reloads own methods", {
+  x <- structure(list(), class = "pkgload_foobar")
+
+  load_all("testS3removed")
+
+  ns <- ns_env("testS3removed")
+  method <- function(...) "Not OK"
+  environment(method) <- ns
+
+  registerS3method(
+    "my_generic",
+    "pkgload_foobar",
+    method,
+    envir = ns
+  )
+
+  # `registerS3method()` doesn't seem to overwrite methods on older
+  # versions of R < 3.5.0.
+  if (is_installed("base", "3.5.0")) {
+    expect_equal(my_generic(x), "Not OK")
+  }
+
+  load_all("testS3removed")
+  expect_equal(my_generic(x), "registered")
+})
+
 test_that("load_all() errors when no DESCRIPTION found", {
   withr::with_tempdir({
     expect_error(load_all(), class = "pkgload_no_desc")
   })
 })
-

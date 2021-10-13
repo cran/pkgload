@@ -140,15 +140,26 @@ load_all <- function(path = ".", reset = TRUE, compile = NA,
     stop("`compile` must be a logical vector of length 1", call. = FALSE)
   }
 
+  old_methods <- list()
+
   if (reset) {
     clear_cache()
 
     # Remove package from known namespaces. We don't unload it to allow
     # safe usage of dangling references.
     if (is_loaded(package)) {
+      methods_env <- ns_s3_methods(package)
+
       unload_pkg_env(package)
       unregister_methods(package)
       unregister_namespace(package)
+
+      # Save foreign methods after unregistering the package's own
+      # methods. We'll restore the foreign methods but let the package
+      # register its own methods again.
+      old_methods <- as.list(methods_env)
+
+      old_methods <- Filter(function(x) is_foreign_method(x, package), old_methods)
     }
   }
 
@@ -200,6 +211,8 @@ load_all <- function(path = ".", reset = TRUE, compile = NA,
 
   # Assign .Depends, if any, to package environment from namespace
   assign_depends(package)
+
+  env_bind(ns_s3_methods(package), !!!old_methods)
 
   # Run hooks
   run_pkg_hook(package, "attach")
@@ -326,4 +339,9 @@ find_test_dir <- function(path) {
   if (dir.exists(inst)) return(inst)
 
   stop("No testthat directories found in ", path, call. = FALSE)
+}
+
+is_foreign_method <- function(x, package) {
+  env <- environment(x)
+  !is_namespace(env) || !is_string(ns_env_name(env), package)
 }

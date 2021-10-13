@@ -1,6 +1,6 @@
-72747d87a4d040280088fca0b778e9e7 *DESCRIPTION
+de64d297c4980ae9c07e48946910fdb8 *DESCRIPTION
 d239f26218f2aae12cc7ea8731affbdc *NAMESPACE
-60fc4e41568ceffb18ecc065827b2189 *NEWS.md
+a6ce2c2164fc8f8d43bd589f19feddf4 *NEWS.md
 a9cebe46e41ae836bd6d65f9aa5393b6 *R/aaa.r
 57cba0195e38e39ac9d578cbd6308d1c *R/dev-example.r
 b2713a1e7453330fc21952d0b268cf89 *R/dev-help.r
@@ -14,9 +14,9 @@ d265c6507ce707b3332566f53570975e *R/imports-env.r
 eed5bbf728acc5542aad04c411d0bedd *R/load-code.r
 39dc14e21ff57b1e6e32508f8f2b51b0 *R/load-data.r
 f896448493c8bca7dc16691c2d70e145 *R/load-depends.r
-0e099c67fb016fe6461e8166499b287b *R/load-dll.r
-f8865322db4af841f41fe3b7180ef314 *R/load.r
-8f7e60155533c1229a2ea7932ff9bc0d *R/namespace-env.r
+247fb7682248fb7b9f4f124ac756acca *R/load-dll.r
+fe943b4f914d97112f0f5d505f5d94d3 *R/load.r
+9307185cfb40eaf9b1fa383b33b23dc7 *R/namespace-env.r
 e5c1d030f51f0062d5e953dc70fb8f33 *R/package-deps.r
 e8750f9b35d889cbdaa90408af13a3ad *R/package-env.r
 7589116e123c471d4c1c607c67de01a4 *R/package.r
@@ -25,9 +25,9 @@ b8fabf24e0ce1b1392568750622ff174 *R/run-loadhooks.r
 188dd459a7d4254b206cc655aec68d2a *R/shims.r
 f20ca6ada867484a0bd51e163d56f4a4 *R/source.r
 2b8824779e6895a6cf864467d2710067 *R/unload.r
-1e7bf1a1ff0a7574ce12ef2ef9fb64af *R/utils.R
+2de47c63062674e2bde6ea1bc7c99f9c *R/utils.R
 f12518d82f2b6b8a473a0aa8c360dbf8 *R/zzz.r
-3d0675e83c5a148339066c12df7dc160 *README.md
+09e136f12875092825f44bd03571c273 *README.md
 04a4c539154069ec2326a98e04179aa1 *inst/WORDLIST
 b4f4e747e4036f6155784fd7ebc44f33 *man/check_dep_version.Rd
 4e6de018cc978094a65295459492b9f8 *man/check_suggested.Rd
@@ -66,7 +66,7 @@ adc3f71d06f3d6268039450bcb385333 *tests/testthat/test-depend.r
 9a1a7781345216b466f2e241daf89b2a *tests/testthat/test-imports.r
 4b21c6b2d6c019e75e7ed98751b6b640 *tests/testthat/test-load-collate.r
 fb9ff788bb966363a891efd5e1fd8a71 *tests/testthat/test-load-hooks.r
-2670df83c63b2ce93f301c99a00c11fc *tests/testthat/test-load.r
+618d2c5c3d2d16adf8415b0c4b4b29da *tests/testthat/test-load.r
 2229534d8dc55e86910105826ce02656 *tests/testthat/test-metadata.r
 4cc889f93542e9bcf7843e72b636ccf1 *tests/testthat/test-namespace.r
 795f9cdcf7dec52b149ce0c864b5fb1c *tests/testthat/test-package.R
@@ -107,7 +107,7 @@ dd195332a76b238203e61dc91f7cbe45 *tests/testthat/testDllLoad/DESCRIPTION
 7dad3921f220256ae4f0f1100767257b *tests/testthat/testDllRcpp/DESCRIPTION
 029ade657ecf41cfeabeba27c10f35e7 *tests/testthat/testDllRcpp/NAMESPACE
 6c1c2c0de9fc0036209d9ae52af0b4c7 *tests/testthat/testDllRcpp/R/RcppExports.R
-6a302d3644bcf956a1c0d73224f2a184 *tests/testthat/testDllRcpp/src/RcppExports.cpp
+0c8827bd3100199eada5cf76012f3686 *tests/testthat/testDllRcpp/src/RcppExports.cpp
 cdae79fe661bbb694dd79074547735b9 *tests/testthat/testDllRcpp/src/rcpp_hello_world.cpp
 1ff255921b6b11864580451a5ed503b7 *tests/testthat/testHelp/DESCRIPTION
 ff09290426402d763c4542e5426dadd3 *tests/testthat/testHelp/NAMESPACE
