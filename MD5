@@ -1,6 +1,6 @@
-de64d297c4980ae9c07e48946910fdb8 *DESCRIPTION
+3e192e138b43cd8d5c98030ddea00584 *DESCRIPTION
 d239f26218f2aae12cc7ea8731affbdc *NAMESPACE
-a6ce2c2164fc8f8d43bd589f19feddf4 *NEWS.md
+5b2a6a11c136ec38235ac768a75c6868 *NEWS.md
 a9cebe46e41ae836bd6d65f9aa5393b6 *R/aaa.r
 57cba0195e38e39ac9d578cbd6308d1c *R/dev-example.r
 b2713a1e7453330fc21952d0b268cf89 *R/dev-help.r
@@ -15,11 +15,12 @@ eed5bbf728acc5542aad04c411d0bedd *R/load-code.r
 39dc14e21ff57b1e6e32508f8f2b51b0 *R/load-data.r
 f896448493c8bca7dc16691c2d70e145 *R/load-depends.r
 247fb7682248fb7b9f4f124ac756acca *R/load-dll.r
-fe943b4f914d97112f0f5d505f5d94d3 *R/load.r
+076082f2f208b7aed3013f1278952e66 *R/load.r
 9307185cfb40eaf9b1fa383b33b23dc7 *R/namespace-env.r
 e5c1d030f51f0062d5e953dc70fb8f33 *R/package-deps.r
 e8750f9b35d889cbdaa90408af13a3ad *R/package-env.r
 7589116e123c471d4c1c607c67de01a4 *R/package.r
+7daba45e900f224905e9ea3117b6e568 *R/po.R
 c8d97095ed556c0c24a0524d59525942 *R/remove-s4-class.r
 b8fabf24e0ce1b1392568750622ff174 *R/run-loadhooks.r
 188dd459a7d4254b206cc655aec68d2a *R/shims.r
@@ -27,7 +28,7 @@ f20ca6ada867484a0bd51e163d56f4a4 *R/source.r
 2b8824779e6895a6cf864467d2710067 *R/unload.r
 2de47c63062674e2bde6ea1bc7c99f9c *R/utils.R
 f12518d82f2b6b8a473a0aa8c360dbf8 *R/zzz.r
-09e136f12875092825f44bd03571c273 *README.md
+209119b2aa6cf197379d130e8b9b04e5 *README.md
 04a4c539154069ec2326a98e04179aa1 *inst/WORDLIST
 b4f4e747e4036f6155784fd7ebc44f33 *man/check_dep_version.Rd
 4e6de018cc978094a65295459492b9f8 *man/check_suggested.Rd
@@ -39,7 +40,7 @@ f00c77ba9f4a4eb759d9cddc317a5f1d *man/dev_meta.Rd
 a0a833c948ce9fd690db2b28cdf159f8 *man/imports_env.Rd
 2a7be3e73a89e6d254f6733c7076cb8b *man/inst.Rd
 24c1d6c3190a88154d2e843d86ce18ac *man/is_dev_package.Rd
-9ccc9a4328ac32f6b9ddab9de50b4750 *man/load_all.Rd
+05e5fa67668cae3b2e7558f15b211325 *man/load_all.Rd
 645d99b9ab2065a57b5ed382bb4fca83 *man/load_code.Rd
 cd41c163b83e1b1c2a235a60c3637695 *man/load_data.Rd
 b1adb0b029bbc2fad19fcd6eff7dd50b *man/load_dll.Rd
@@ -70,6 +71,7 @@ fb9ff788bb966363a891efd5e1fd8a71 *tests/testthat/test-load-hooks.r
 2229534d8dc55e86910105826ce02656 *tests/testthat/test-metadata.r
 4cc889f93542e9bcf7843e72b636ccf1 *tests/testthat/test-namespace.r
 795f9cdcf7dec52b149ce0c864b5fb1c *tests/testthat/test-package.R
+93d4fa6bc0994e600c2b1dc8143676c7 *tests/testthat/test-po.R
 ccd0d821b2d99c6a432c560cdd0730da *tests/testthat/test-s4-export.r
 9a1c23da0f0015f81f0ddeade1bb58d8 *tests/testthat/test-s4-sort.r
 8e99e849ceba7137f304c82825c60ca0 *tests/testthat/test-s4-unload.r
@@ -172,3 +174,8 @@ d79dbc16cb00ebf4fc5783d3b830c278 *tests/testthat/testShim/DESCRIPTION
 8960211fe22ff697115cc52c5f6616b6 *tests/testthat/testShim/R/a.r
 119151c832b23525b2818019573bb463 *tests/testthat/testShim/inst/A.txt
 490d1b2eb66ba6d4011ada175d264a41 *tests/testthat/testShim/inst/B.txt
+1b52fde955450cbefa30dc871752a575 *tests/testthat/testTranslations/DESCRIPTION
+cea30ae8568f3d1407abd1b23febfbe9 *tests/testthat/testTranslations/R/hello.r
+d8d02e415297e89aa5661c49dc29a2fe *tests/testthat/testTranslations/inst/po/fr/LC_MESSAGES/R-testTranslations.mo
+ece193fa5a3d121085507eca8095eb39 *tests/testthat/testTranslations/po/R-fr.po
+7b49caa498cd8c376153517e4f3e1c0e *tests/testthat/testTranslations/po/R-testTranslations.pot
