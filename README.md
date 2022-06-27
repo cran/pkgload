@@ -1,8 +1,8 @@
 # pkgload
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/r-lib/pkgload/workflows/R-CMD-check/badge.svg)](https://github.com/r-lib/pkgload/actions)
 [![Codecov test coverage](https://codecov.io/gh/r-lib/pkgload/branch/main/graph/badge.svg)](https://app.codecov.io/gh/r-lib/pkgload?branch=main)
+[![R-CMD-check](https://github.com/r-lib/pkgload/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/r-lib/pkgload/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of pkgload is to simulate the process of installing and loading a
@@ -18,3 +18,8 @@ In most cases you will not use pkgload directly, and instead you'll call it via 
 ``` r
 devtools::load_all()
 ```
+
+
+## Code of Conduct
+
+Please note that the pkgload project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.

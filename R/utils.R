@@ -29,43 +29,37 @@ is_installed <- function(package, version = 0) {
 #' @keywords internal
 #' @export
 check_suggested <- function(package, version = NULL, compare = NA, path = inst("pkgload")) {
-
   if (is.null(version)) {
     if (!is.na(compare)) {
-      stop("Cannot set ", sQuote(compare), " without setting ",
-           sQuote(version), call. = FALSE)
+      cli::cli_abort("Must provide both {.arg compare} and {.arg version}.")
     }
-
     version <- suggests_dep(package, path = path)
   }
 
   if (!is_installed(package) || !check_dep_version(package, version)) {
-    msg <- paste0(sQuote(package),
-      if (is.na(version)) "" else paste0(" ", version),
-      " must be installed for this functionality.")
+    cli_version <- if (is_na(version)) "" else paste0(" ", version)
+    msg <- c("{.pkg package}{cli_version} must be installed for this functionality.")
 
     if (interactive()) {
-      cli::cli_alert_info(msg)
-      cli::cli_alert_danger("Would you like to install it?")
+      cli::cli_inform(c("i" = msg))
+      cli::cli_inform(c("!" = "Would you like to install it?"))
       if (utils::menu(c("Yes", "No")) == 1) {
         utils::install.packages(package)
-      } else {
-        stop(msg, call. = FALSE)
+        return()
       }
-    } else {
-      stop(msg, call. = FALSE)
     }
+    cli::cli_abort(msg)
   }
 }
 
 suggests_dep <- function(package, path = inst("pkgload")) {
-
   desc <- pkg_desc(path)$get_deps()
   found <- desc[desc$type == "Suggests" & desc$package == package, "version"]
 
   if (!length(found)) {
-     stop("'", package, "' is not in Suggests: for '", pkg_name(path), "'", call. = FALSE)
+    cli::cli_abort("{.pkg {package}} is not in {.code Suggests:} for {.pkg {pkg_name(path)}}.")
   }
+
   found
 }
 
@@ -104,7 +98,10 @@ extract_lang <- function(x, f, ...) {
     res <- recurse(x)[[1]]
     if (top_level_call <- identical(sys.call()[[1]], as.symbol("extract_lang"))
         && is.null(res)) {
-      warning("pkgload is incompatible with the current version of R. `load_all()` may function incorrectly.", call. = FALSE)
+      cli::cli_warn(c(
+        "pkgload is incompatible with the current version of R.",
+        "i" = "{.code load_all()} may function incorrectly."
+      ))
     }
     return(res)
   }
@@ -124,6 +121,7 @@ modify_lang <- function(x, f, ...) {
   } else if (is.function(x)) {
      formals(x) <- modify_lang(formals(x), f, ...)
      body(x) <- modify_lang(body(x), f, ...)
+     x
   } else {
     x
   }
@@ -172,7 +170,7 @@ copy_env_lazy <- function(src, dest = new.env(parent = emptyenv()),
 
 # A version of delayedAssign which does _not_ use substitute
 delayed_assign <- function(x, value, eval.env = parent.frame(1), assign.env = parent.frame(1)) {
-  (get(".Internal", baseenv()))(delayedAssign(x, value, eval.env, assign.env))
+  inject(delayedAssign(x, !!value, eval.env, assign.env))
 }
 
 last <- function(x) utils::tail(x, n = 1L)
@@ -183,4 +181,25 @@ single_quote <- function(x) {
 
 ns_s3_methods <- function(pkg) {
  ns_env(pkg)$.__S3MethodsTable__. 
+}
+
+paste_line <- function(...) {
+  paste(c(...), collapse = "\n")
+}
+
+style_hyperlink_run <- function(code) {
+  if (nzchar(Sys.getenv("R_CLI_HAS_HYPERLINK_RUN"))) {
+    link <- paste0("rstudio:run:", code)
+    code <- cli::style_hyperlink(code, link)
+  }
+
+  cli::format_inline("{.code {code}}")
+}
+
+cat_line <- function(...) {
+  cat(paste0(..., "\n", collapse = ""))
+}
+
+is_rstudio <- function() {
+  is_string(.Platform$GUI, "RStudio")
 }
