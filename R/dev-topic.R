@@ -9,19 +9,15 @@ rd_files <- function(path) {
   sort_ci(files)
 }
 
+#' @rdname dev_help
+#' @export
 dev_topic_find <- function(topic, dev_packages = NULL) {
   topic <- dev_topic_parse(topic, dev_packages)
 
-  path <- NULL
-  pkg <- NULL
   for (pkg_name in topic$pkg_names) {
-    path <- dev_topic_path(topic$topic,
-                           path = ns_path(pkg_name))
+    path <- dev_topic_path(topic$topic, path = ns_path(pkg_name))
     if (!is.null(path)) {
-      return(list(
-        path = path,
-        pkg = pkg_name
-      ))
+      return(list(path = path, pkg = pkg_name))
     }
   }
 

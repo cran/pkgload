@@ -72,12 +72,39 @@ test_that("show_help and shim_question files for devtools-loaded packages", {
     ))
 })
 
+test_that("shim_help and shim_questions works if topic moves", {
+  load_all(test_path('testHelp'))
+  on.exit(unload(test_path('testHelp')))
+
+  path_man <- test_path("testHelp/man/")
+  rel_rd_path <- function(x) {
+    as.character(fs::path_rel(x$path, path_man))
+  }
+
+  expect_equal(rel_rd_path(shim_help("foofoo")), "foofoo.Rd")
+  expect_equal(rel_rd_path(shim_question("foofoo")), "foofoo.Rd")
+
+  fs::file_move(fs::path(path_man, "foofoo.Rd"), fs::path(path_man, "barbar.Rd"))
+  on.exit(
+    fs::file_move(fs::path(path_man, "barbar.Rd"), fs::path(path_man, "foofoo.Rd")),
+    add = TRUE
+  )
+
+  expect_equal(rel_rd_path(shim_help("foofoo")), "barbar.Rd")
+  expect_equal(rel_rd_path(shim_question("foofoo")), "barbar.Rd")
+})
+
 test_that("dev_help works with package and function help with the same name", {
   load_all(test_path('testHelp'))
   on.exit(unload(test_path('testHelp')))
 
   h1 <- dev_help("testHelp")
   expect_identical(shim_question(testHelp::testHelp), h1)
+})
+
+test_that("dev_help gives clear error if no packages loaded", {
+  mockr::local_mock(dev_packages = function() character())
+  expect_snapshot(dev_help("foo"), error = TRUE)
 })
 
 test_that("unknown macros don't trigger warnings (#119)", {
@@ -107,6 +134,8 @@ test_that("complex expressions are checked", {
 })
 
 test_that("can use macros in other packages (#120)", {
+  expect_true(has_rd_macros(test_path("testMacroDownstream/")))
+
   skip_if_not_installed("mathjaxr")
 
   load_all(test_path("testMacroDownstream"))
