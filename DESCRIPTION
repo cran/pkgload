@@ -1,6 +1,6 @@
 Package: pkgload
 Title: Simulate Package Installation and Attach
-Version: 1.3.2
+Version: 1.3.2.1
 Authors@R: c(
     person("Hadley", "Wickham", role = "aut"),
     person("Winston", "Chang", role = "aut"),
@@ -26,7 +26,7 @@ Config/Needs/website: tidyverse/tidytemplate, ggplot2
 Encoding: UTF-8
 RoxygenNote: 7.2.1
 NeedsCompilation: no
-Packaged: 2022-11-14 14:04:57 UTC; lionel
+Packaged: 2023-07-07 13:53:39 UTC; ripley
 Author: Hadley Wickham [aut],
   Winston Chang [aut],
   Jim Hester [aut],
@@ -36,4 +36,4 @@ Author: Hadley Wickham [aut],
     R)
 Maintainer: Lionel Henry <lionel@rstudio.com>
 Repository: CRAN
-Date/Publication: 2022-11-16 15:20:13 UTC
+Date/Publication: 2023-07-08 07:18:54 UTC
