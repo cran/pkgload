@@ -31,7 +31,7 @@
 #'
 #' - If you use \pkg{testthat}, will load all test helpers so you can
 #'   access them interactively. devtools sets the `DEVTOOLS_LOAD`
-#'   environment variable to `"true"` to let you check whether the
+#'   environment variable to the package name to let you check whether the
 #'   helpers are run during package loading.
 #'
 #' `is_loading()` returns `TRUE` when it is called while `load_all()`
@@ -118,7 +118,7 @@ load_all <- function(path = ".",
                      attach = TRUE,
                      export_all = TRUE,
                      export_imports = export_all,
-                     helpers = TRUE,
+                     helpers = export_all,
                      attach_testthat = uses_testthat(path),
                      quiet = NULL,
                      recompile = FALSE,
@@ -144,20 +144,14 @@ load_all <- function(path = ".",
     on.exit(compiler::enableJIT(oldEnabled), TRUE)
   }
 
-  # Compile dll if requested, we don't ever need to do this if a package doesn't
-  # have a src/ directory
-  if (!dir.exists(file.path(path, "src"))) {
-    compile <- FALSE
-  } else if (missing(compile) && !missing(recompile)) {
+  if (missing(compile) && !missing(recompile)) {
     compile <- if (isTRUE(recompile)) TRUE else NA
   }
 
   if (isTRUE(compile)) {
-    rlang::check_installed("pkgbuild", reason = "to compile packages with a `src/` directory.")
     pkgbuild::clean_dll(path)
     pkgbuild::compile_dll(path, quiet = quiet)
   } else if (identical(compile, NA)) {
-    rlang::check_installed("pkgbuild", reason = "to compile packages with a `src/` directory.")
     pkgbuild::compile_dll(path, quiet = quiet)
   } else if (identical(compile, FALSE)) {
     # don't compile

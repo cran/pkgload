@@ -31,7 +31,7 @@ ns_path <- function(package) {
 create_ns_env <- function(path = ".", call = caller_env()) {
   path <- pkg_path(path)
   package <- pkg_name(path)
-  version <- pkg_version(path)
+  version <- pkg_version_raw(path)
 
   if (is_loaded(package)) {
     cli::cli_abort(
@@ -72,7 +72,7 @@ onload_assign("makeNamespace",
       }))
 )
 
-# Read the NAMESPACE file and set up the imports metdata.
+# Read the NAMESPACE file and set up the imports metadata.
 # (which is stored in .__NAMESPACE__.)
 setup_ns_imports <- function(path = ".") {
   path <- pkg_path(path)
@@ -83,7 +83,7 @@ setup_ns_imports <- function(path = ".") {
 }
 
 
-# Read the NAMESPACE file and set up the exports metdata. This must be
+# Read the NAMESPACE file and set up the exports metadata. This must be
 # run after all the objects are loaded into the namespace because
 # namespaceExport throw errors if the objects are not present.
 setup_ns_exports <- function(path = ".") {
@@ -234,7 +234,12 @@ unregister_namespace <- function(name = NULL) {
   # unloaded, it might lead to decompress errors if unloaded or to
   # inconsistencies if reloaded (the bindings are resolved in the new
   # namespace).
-  eapply(ns_env(name), force, all.names = TRUE)
+  #
+  # We take precautions not to trigger active bindings in case these
+  # have side effects such as throwing an error.
+  ns <- ns_env(name)
+  active_bindings <- env_binding_are_active(ns)
+  env_get_list(ns, names(active_bindings)[!active_bindings])
 
   # Remove the item from the registry
   env_unbind(ns_registry_env(), name)

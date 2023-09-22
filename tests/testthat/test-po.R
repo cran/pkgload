@@ -4,20 +4,20 @@ test_that("translation domain correctly loaded", {
   load_all(test_path("testTranslations"))
   withr::defer(unload("testTranslations"))
 
-  expect_equal(withr::with_language("fr", hello()), "Bonjour")
+  expect_equal(with_lang("fr_FR", "fr", hello()), "Bonjour")
 
   load_all(test_path("testTranslations"))
   expect_equal(length(temp_po_dirs("testTranslations")), 1)
 })
 
-test_that("modifed translations are correctly reloaded", {
+test_that("modified translations are correctly reloaded", {
   pkg <- withr::local_tempdir()
   file.copy(dir(test_path("testTranslations"), full.names = TRUE), pkg, recursive = TRUE)
 
   # Load package and generate translation
   load_all(pkg)
   withr::defer(unload("testTranslations"))
-  withr::with_language("fr", hello())
+  with_lang("fr_FR", "fr", hello())
 
   # Modify .po file
   po_path <- file.path(pkg, "po", "R-fr.po")
@@ -33,5 +33,5 @@ test_that("modifed translations are correctly reloaded", {
 
   # Re-load and re-translate
   load_all(pkg)
-  expect_equal(withr::with_language("fr", hello()), "Salut")
+  expect_equal(with_lang("fr_FR", "fr", hello()), "Salut")
 })

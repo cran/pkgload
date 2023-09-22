@@ -14,7 +14,7 @@ test_that("helpers are available after load_all", {
   # object defined in a helper
   expect_equal(foo, 1)
 
-  # object definde in helper, referencing lazy data object mtcars2
+  # object defined in helper, referencing lazy data object mtcars2
   expect_equal(head_mtcars, head(mtcars2))
 
   # object defined in helper using explicitly qualified package name
@@ -74,6 +74,12 @@ test_that("unloading or reloading forces bindings", {
       expect_true(forced)
     }
   )
+})
+
+test_that("unloading or reloading does not call active bindings", {
+  on.exit(unload("testActiveBindings"))
+
+  expect_no_error(load_all(test_path("testActiveBindings")))
 })
 
 test_that("reloading a package unloads deleted S3 methods", {

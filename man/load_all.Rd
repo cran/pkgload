@@ -12,7 +12,7 @@ load_all(
   attach = TRUE,
   export_all = TRUE,
   export_imports = export_all,
-  helpers = TRUE,
+  helpers = export_all,
   attach_testthat = uses_testthat(path),
   quiet = NULL,
   recompile = FALSE,
@@ -93,7 +93,7 @@ for more details.
 the correct times.
 \item If you use \pkg{testthat}, will load all test helpers so you can
 access them interactively. devtools sets the \code{DEVTOOLS_LOAD}
-environment variable to \code{"true"} to let you check whether the
+environment variable to the package name to let you check whether the
 helpers are run during package loading.
 }
 
