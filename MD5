@@ -1,6 +1,6 @@
-7ad8943e997c5b44d222e65f89614414 *DESCRIPTION
+59d7d73665a88748727dbb3119c4bccc *DESCRIPTION
 6e6e3c7e91956aee9c18f6e7fc0955d9 *NAMESPACE
-e827685d824409842ea7143f15714551 *NEWS.md
+200e6d219cabcfa3d142dbb29cad6210 *NEWS.md
 a9cebe46e41ae836bd6d65f9aa5393b6 *R/aaa.R
 b711d0c3c4964e4191e2bd766b5ba0a3 *R/dev-example.R
 4dee1fdf259c764367f0c185afad8785 *R/dev-help.R
@@ -15,7 +15,7 @@ a37296942d3237fc411927c2715dd184 *R/has_tests.R
 39dc14e21ff57b1e6e32508f8f2b51b0 *R/load-data.R
 fd8a7cb567e20b4434550dd10ee6e416 *R/load-depends.R
 05a25f08cdd83535a79bcb70f5e64f54 *R/load-dll.R
-6c7994b480bb22c37e9241eb36f4aa44 *R/load.R
+0d56e3b5ea9817db6c4467002d7be8b8 *R/load.R
 ac982054388305b5afa5717a2d12e2d2 *R/namespace-env.R
 f9db8ae5cd99895304507048c9509071 *R/package-deps.R
 2232496418fc1708ac4600ab304a0924 *R/package-env.R
@@ -24,11 +24,11 @@ df6cc46bc7fae1a55b713f3d5065b35a *R/pkgload-package.R
 4d64aeb23d01abfff5142422d92c9fa1 *R/po.R
 125cb55469aaa50ff1ac46646b26136c *R/remove-s4-class.R
 0ced33eefbc13142be6566ac8e18fd83 *R/run-loadhooks.R
-f0aa3bd55b0b8278d9a044635bc63968 *R/shims.R
+54e02054014a0b7398ebc6aead1d6df7 *R/shims.R
 9925453b25c2f5042abb50ab70e62169 *R/source.R
 5d5f2a38777a41ae45e3e67418585497 *R/unload.R
 137830b86402ceb34b9019ab1233dd75 *R/utils.R
-9f875cc278a3dab4fa4aee7135bca1d3 *R/zzz.R
+12ab111490aead6e6fd41fbebd1ab65e *R/zzz.R
 640486097e1f539947846012132def05 *README.md
 04a4c539154069ec2326a98e04179aa1 *inst/WORDLIST
 a40bb554c32ce17f55d37d85abebb147 *man/check_dep_version.Rd
@@ -68,7 +68,7 @@ c10340d9ed31dc4a45e72f623f2db756 *tests/testthat/_snaps/load.md
 a4db6c98dc5f031a8cc9ae5bce6a1ea1 *tests/testthat/_snaps/namespace.md
 533ed49a49a795bb528f4a98869b51c7 *tests/testthat/_snaps/shim.md
 b00dc7d60a4d115e9981a53d10e8d947 *tests/testthat/_snaps/source.md
-60466d5edee89ad5cae74acf86f8d606 *tests/testthat/helper-pkgload.R
+49bbe330b2db3b4dc51cc13c1b159369 *tests/testthat/helper-pkgload.R
 af016f4046099da698799964e6752591 *tests/testthat/test-data.R
 58b20635c623a7ab9e3ec2584e07b9e2 *tests/testthat/test-depend.R
 a85767268aa03d548d58b0d26a186356 *tests/testthat/test-description.R
@@ -83,9 +83,9 @@ f96c8bbdaab2c2935e2139a92034dffa *tests/testthat/test-load-hooks.R
 0d25ada93a9cfe36146b856228f83c18 *tests/testthat/test-load.R
 08bc307e219448b12c132fb256ad3318 *tests/testthat/test-metadata.R
 feaa92922478581bc74fd251988fd129 *tests/testthat/test-namespace-env.R
-1e0cb6bd4e48bb90cf6452eae04b7ffb *tests/testthat/test-namespace.R
+4f6fdcfd1fcc9a3fd920cf3cb2653e7f *tests/testthat/test-namespace.R
 b07b0f362363449e8d55be5f261cf627 *tests/testthat/test-package.R
-b91eb510176e41c4f5803d07c6339ca8 *tests/testthat/test-po.R
+d903ff32269a01f8271070f1c8efc2b5 *tests/testthat/test-po.R
 df154e244bbb3d5b9fc2b668bb4d7efd *tests/testthat/test-s4-export.R
 0d50cbb94b8411716ea3e1a1cab50746 *tests/testthat/test-s4-sort.R
 b393488b25f862302b68372af56a40e8 *tests/testthat/test-s4-unload.R
