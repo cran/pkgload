@@ -89,7 +89,7 @@ print.dev_topic <- function(x, ...) {
   type <- arg_match0(x$type %||% "text", c("text", "html"))
 
   # Use rstudio's previewRd() if possible
-  if (type == "html" && is_rstudio() && is_installed("rstudioapi")) {
+  if (type == "html" && rstudioapi_available()) {
     # If the package has Rd macros, this needs a version of rstudio
     # that loads them, see rstudio/rstudio#12111
     version_needed <- if (has_rd_macros(dirname(dirname(x$path)))) "2022.12.0.256"
@@ -261,11 +261,12 @@ shim_help <- function(topic, package = NULL, ...) {
   package_name <- substitute(package)
   if (is_symbol(package_name)) {
     package_str <- as_string(package_name)
-  } else if (is_null(package_name)) {
-    package_str <- NULL
   } else {
+    # Complex expression, just evaluate it (#266). The value is
+    # injected in `utils::help(package = )` below, causing it to be
+    # interpreted as is.
     package_str <- package
-    package_name <- sym(package)
+    package_name <- package
   }
 
   use_dev <-

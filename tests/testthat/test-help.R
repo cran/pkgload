@@ -22,6 +22,18 @@ test_that("shim_help behaves the same as utils::help for nonexistent objects", {
   expect_equal(length(shim_help("foofoo")), 0)
 })
 
+test_that("shim_help works with complex NULL `package = ` argument (#266)", {
+  expect_equal(
+    class(pkgload:::shim_help(list, package = (NULL))),
+    "help_files_with_topic"
+  )
+
+  package <- "base"
+  expect_equal(
+    class(pkgload:::shim_help(list, package = (package))),
+    "help_files_with_topic"
+  )
+})
 
 test_that("shim_question behaves the same as utils::? for non-devtools-loaded packages", {
   expect_identical(shim_question(lm)[1], utils::`?`(lm)[1])
@@ -101,7 +113,7 @@ test_that("dev_help works with package and function help with the same name", {
 })
 
 test_that("dev_help gives clear error if no packages loaded", {
-  mockr::local_mock(dev_packages = function() character())
+  local_mocked_bindings(dev_packages = function() character())
   expect_snapshot(dev_help("foo"), error = TRUE)
 })
 
@@ -142,8 +154,8 @@ test_that("can use macros in other packages (#120)", {
   text_lines <- topic_lines(topic, "text")
   html_lines <- topic_lines(topic, "html")
 
-  expect_true(any(grepl("foreign macro success", text_lines)))
-  expect_true(any(grepl("foreign macro.*success", html_lines)))
+  expect_match(text_lines, "foreign macro success", all = FALSE)
+  expect_match(html_lines, "foreign macro.*success", all = FALSE)
 })
 
 test_that("httpdPort() is available", {

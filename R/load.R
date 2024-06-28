@@ -36,6 +36,8 @@
 #'
 #' `is_loading()` returns `TRUE` when it is called while `load_all()`
 #' is running. This may be useful e.g. in `.onLoad` hooks.
+#' A package loaded with `load_all()` can be identified with with
+#' [is_dev_package()].
 #'
 #' # Differences to regular loading
 #'
@@ -63,11 +65,9 @@
 #'    be useful for checking for missing exports.
 #'
 #' @param path Path to a package, or within a package.
-#' @param reset clear package environment and reset file cache before loading
-#'   any pieces of the package. This largely equivalent to running
-#'   [unload()], however the old namespaces are not completely removed and no
-#'   `.onUnload()` hooks are called. Use `reset = FALSE` may be faster for
-#'   large code bases, but is a significantly less accurate approximation.
+#' @param reset `r lifecycle::badge("deprecated")` This is no longer supported
+#'   because preserving the namespace requires unlocking its environment, which
+#'   is no longer possible in recent versions of R.
 #' @param compile If `TRUE` always recompiles the package; if `NA`
 #'   recompiles if needed (as determined by [pkgbuild::needs_compile()]);
 #'   if `FALSE`, never recompiles.
@@ -104,9 +104,6 @@
 #' # Running again loads changed files
 #' load_all("./")
 #'
-#' # With reset=TRUE, unload and reload the package for a clean start
-#' load_all("./", TRUE)
-#'
 #' # With export_all=FALSE, only objects listed as exports in NAMESPACE
 #' # are exported
 #' load_all("./", export_all = FALSE)
@@ -123,6 +120,13 @@ load_all <- function(path = ".",
                      quiet = NULL,
                      recompile = FALSE,
                      warn_conflicts = TRUE) {
+  if (!isTRUE(reset)) {
+    lifecycle::deprecate_warn(
+      when = "1.3.5", 
+      what = "load_all(reset)",
+      details = "`reset = FALSE` is no longer supported."
+    )
+  }
 
   path <- pkg_path(path)
   package <- pkg_name(path)
@@ -161,31 +165,24 @@ load_all <- function(path = ".",
   }
 
   old_methods <- list()
+  clear_cache()
 
-  if (reset) {
-    clear_cache()
-
-    # Remove package from known namespaces. We don't unload it to allow
-    # safe usage of dangling references.
-    if (is_loaded(package)) {
-      patch_colon(package)
-
-      methods_env <- ns_s3_methods(package)
-      unregister(package)
-
-      # Save foreign methods after unregistering the package's own
-      # methods. We'll restore the foreign methods but let the package
-      # register its own methods again.
-      old_methods <- as.list(methods_env)
-      old_methods <- Filter(function(x) is_foreign_method(x, package), old_methods)
-    }
-  }
-
+  # Remove package from known namespaces. We don't unload it to allow
+  # safe usage of dangling references.
   if (is_loaded(package)) {
-    rlang::env_unlock(ns_env(package))
-  } else {
-    create_ns_env(path)
+    patch_colon(package)
+
+    methods_env <- ns_s3_methods(package)
+    unregister(package)
+
+    # Save foreign methods after unregistering the package's own
+    # methods. We'll restore the foreign methods but let the package
+    # register its own methods again.
+    old_methods <- as.list(methods_env)
+    old_methods <- Filter(function(x) is_foreign_method(x, package), old_methods)
   }
+
+  create_ns_env(path)
 
   out <- list(env = ns_env(package))
 
@@ -254,6 +251,14 @@ load_all <- function(path = ".",
     )
   }
 
+  # Regenerate compilation database if needed. This must happen after loading
+  # the DLL to ensure that `Makevars` is up-to-date.
+  catch_and_warn(
+    if (has_compilation_db(description)) {
+      generate_db(path)
+    }
+  )
+
   invisible(out)
 }
 
@@ -291,7 +296,7 @@ warn_if_conflicts <- function(package, env1, env2) {
   }
 
   header <- cli::rule(
-    left = crayon::bold("Conflicts"),
+    left = cli::style_bold("Conflicts"),
     right = paste0(package, " ", "conflicts")
   )
 
@@ -303,7 +308,7 @@ warn_if_conflicts <- function(package, env1, env2) {
 
   directions <- c(
     "i" = cli::col_silver("Did you accidentally source a file rather than using `load_all()`?"),
-    " " = cli::col_silver(glue::glue("Run {run_rm} to remove the conflicts."))
+    " " = cli::col_silver("Run {run_rm} to remove the conflicts.")
   )
 
   cli::cli_warn(
@@ -333,7 +338,7 @@ conflict_bullets <- function(package, both) {
     more <- NULL
   }
 
-  bullets <- glue::glue("`{crayon::green(both)}` masks `{crayon::blue(package)}::{both}()`.")
+  bullets <- glue::glue("`{cli::col_green(both)}` masks `{cli::col_blue(package)}::{both}()`.")
   c(set_names(bullets, "x"), more)
 }
 
@@ -378,11 +383,24 @@ is_loading <- function(pkg = NULL) {
   }
 }
 
-# Ensure that calls to `::` resolve to the original unregistered
-# namespace
+# Ensure that calls to `::` resolve to the original detached namespace. It is
+# uncommon to refer to functions in your own package with `::` but it sometimes
+# is necessary, e.g. in standalone files.
+#
+# To enable this, assign `::` in your namespace, e.g.
+#
+# ```
+# on_load(`::` <- base::`::`)
+# ```
 patch_colon <- function(package) {
   ns <- asNamespace(package)
-  rlang::env_unlock(ns)
+
+  if (!env_has(ns, "::")) {
+    return()
+  }
+
+  rlang::env_binding_unlock(ns, "::")
+  on.exit(rlang::env_binding_lock(ns, "::"))
 
   ns[["::"]] <- function(lhs, rhs) {
     lhs <- as.character(substitute(lhs))
@@ -397,6 +415,4 @@ patch_colon <- function(package) {
       eval(bquote(base::`::`(.(lhs), .(rhs))), baseenv())
     }
   }
-
-  lockEnvironment(ns)
 }
