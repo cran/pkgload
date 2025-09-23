@@ -36,7 +36,7 @@
 #'
 #' `is_loading()` returns `TRUE` when it is called while `load_all()`
 #' is running. This may be useful e.g. in `.onLoad` hooks.
-#' A package loaded with `load_all()` can be identified with with
+#' A package loaded with `load_all()` can be identified with
 #' [is_dev_package()].
 #'
 #' # Differences to regular loading
@@ -63,6 +63,16 @@
 #'    listed as exports, use `export_all = FALSE`. This more closely simulates
 #'    behavior when loading an installed package with [library()], and can
 #'    be useful for checking for missing exports.
+#'
+#' # Controlling the debug compiler flags
+#'
+#' `load_all()` delegates to [pkgbuild::compile_dll()] to perform the actual
+#' compilation, during which by default some debug compiler flags are
+#' appended. If you would like to produce an optimized build instead, you can
+#' opt out by either using `debug = FALSE`, setting the `pkg.build_extra_flags`
+#' option to `FALSE`, or setting the `PKG_BUILD_EXTRA_FLAGS` environment variable
+#' to `FALSE`. For further details see the Details section in [pkgbuild::compile_dll()].
+#'
 #'
 #' @param path Path to a package, or within a package.
 #' @param reset `r lifecycle::badge("deprecated")` This is no longer supported
@@ -95,6 +105,9 @@
 #'   define a function directly in the R console. This is frustrating to debug,
 #'   as it feels like the changes you make to the package source aren't having
 #'   the expected effect.
+#' @param debug If `TRUE` (the default), then the build
+#'   runs without optimisation (`-O0`) and with debug symbols (`-g`). See
+#'   [pkgbuild::compile_dll()] for details.
 #' @keywords programming
 #' @examples
 #' \dontrun{
@@ -109,20 +122,23 @@
 #' load_all("./", export_all = FALSE)
 #' }
 #' @export
-load_all <- function(path = ".",
-                     reset = TRUE,
-                     compile = NA,
-                     attach = TRUE,
-                     export_all = TRUE,
-                     export_imports = export_all,
-                     helpers = export_all,
-                     attach_testthat = uses_testthat(path),
-                     quiet = NULL,
-                     recompile = FALSE,
-                     warn_conflicts = TRUE) {
+load_all <- function(
+  path = ".",
+  reset = TRUE,
+  compile = NA,
+  attach = TRUE,
+  export_all = TRUE,
+  export_imports = export_all,
+  helpers = export_all,
+  attach_testthat = uses_testthat(path),
+  quiet = NULL,
+  recompile = FALSE,
+  warn_conflicts = TRUE,
+  debug = TRUE
+) {
   if (!isTRUE(reset)) {
     lifecycle::deprecate_warn(
-      when = "1.3.5", 
+      when = "1.3.5",
       what = "load_all(reset)",
       details = "`reset = FALSE` is no longer supported."
     )
@@ -132,7 +148,7 @@ load_all <- function(path = ".",
   package <- pkg_name(path)
   description <- pkg_desc(path)
 
-  withr::local_envvar(c(DEVTOOLS_LOAD = package))
+  local_envvar(DEVTOOLS_LOAD = package)
 
   quiet <- load_all_quiet(quiet, "load_all")
 
@@ -146,7 +162,7 @@ load_all <- function(path = ".",
     # JIT compilation and it would be locked before we can insert shims into
     # it).
     oldEnabled <- compiler::enableJIT(0)
-    on.exit(compiler::enableJIT(oldEnabled), TRUE)
+    defer(compiler::enableJIT(oldEnabled))
   }
 
   if (missing(compile) && !missing(recompile)) {
@@ -155,9 +171,9 @@ load_all <- function(path = ".",
 
   if (isTRUE(compile)) {
     pkgbuild::clean_dll(path)
-    pkgbuild::compile_dll(path, quiet = quiet)
+    pkgbuild::compile_dll(path, quiet = quiet, debug = debug)
   } else if (identical(compile, NA)) {
-    pkgbuild::compile_dll(path, quiet = quiet)
+    pkgbuild::compile_dll(path, quiet = quiet, debug = debug)
   } else if (identical(compile, FALSE)) {
     # don't compile
   } else {
@@ -179,7 +195,10 @@ load_all <- function(path = ".",
     # methods. We'll restore the foreign methods but let the package
     # register its own methods again.
     old_methods <- as.list(methods_env)
-    old_methods <- Filter(function(x) is_foreign_method(x, package), old_methods)
+    old_methods <- Filter(
+      function(x) is_foreign_method(x, package),
+      old_methods
+    )
   }
 
   create_ns_env(path)
@@ -276,7 +295,14 @@ load_all_quiet <- function(quiet, fn = NULL) {
 }
 
 is_function_in_environment <- function(name, env) {
-  vapply(name, exists, logical(1), where = env, mode = "function", inherits = FALSE)
+  vapply(
+    name,
+    exists,
+    logical(1),
+    where = env,
+    mode = "function",
+    inherits = FALSE
+  )
 }
 
 warn_if_conflicts <- function(package, env1, env2) {
@@ -288,7 +314,7 @@ warn_if_conflicts <- function(package, env1, env2) {
   # Verify are functions in both environments
   both <- both[
     is_function_in_environment(both, env1) &
-    is_function_in_environment(both, env2)
+      is_function_in_environment(both, env2)
   ]
 
   if (length(both) == 0) {
@@ -307,7 +333,9 @@ warn_if_conflicts <- function(package, env1, env2) {
   run_rm <- style_hyperlink_run(run_rm)
 
   directions <- c(
-    "i" = cli::col_silver("Did you accidentally source a file rather than using `load_all()`?"),
+    "i" = cli::col_silver(
+      "Did you accidentally source a file rather than using `load_all()`?"
+    ),
     " " = cli::col_silver("Run {run_rm} to remove the conflicts.")
   )
 
@@ -338,7 +366,9 @@ conflict_bullets <- function(package, both) {
     more <- NULL
   }
 
-  bullets <- glue::glue("`{cli::col_green(both)}` masks `{cli::col_blue(package)}::{both}()`.")
+  bullets <- glue::glue(
+    "`{cli::col_green(both)}` masks `{cli::col_blue(package)}::{both}()`."
+  )
   c(set_names(bullets, "x"), more)
 }
 

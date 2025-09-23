@@ -28,11 +28,7 @@ attach_ns <- function(package) {
   invisible(pkgenv)
 }
 
-populate_pkg_env <- function(pkg,
-                             path,
-                             export_all,
-                             export_imports,
-                             helpers) {
+populate_pkg_env <- function(pkg, path, export_all, export_imports, helpers) {
   pkg_env <- pkg_env(pkg)
 
   if (export_all) {
@@ -47,10 +43,8 @@ populate_pkg_env <- function(pkg,
 
   # Source test helpers into pkg environment
   if (helpers && uses_testthat(path)) {
-    withr_with_envvar(
-      c(NOT_CRAN = "true"),
-      testthat_source_test_helpers(find_test_dir(path), env = pkg_env)
-    )
+    local_envvar(NOT_CRAN = "true")
+    testthat_source_test_helpers(find_test_dir(path), env = pkg_env)
   }
 }
 
@@ -75,8 +69,9 @@ exports_exclusion_list <- c(
 run_ns_load_actions <- function(package) {
   nsenv <- ns_env(package)
   actions <- methods::getLoadActions(nsenv)
-  for (action in actions)
+  for (action in actions) {
     action(nsenv)
+  }
 }
 
 # Copy over the objects from the namespace env to the package env
@@ -88,7 +83,6 @@ export_ns <- function(package) {
 
   exports <- getNamespaceExports(nsenv)
   importIntoEnv(pkgenv, exports, nsenv, exports)
-
 }
 
 export_lazydata <- function(package) {
@@ -99,8 +93,10 @@ export_lazydata <- function(package) {
   # If lazydata is true, manually copy data objects in $lazydata to package
   # environment
   lazydata <- desc$get("LazyData")
-  if (!is.na(lazydata) &&
-      tolower(lazydata) %in% c("true", "yes")) {
+  if (
+    !is.na(lazydata) &&
+      tolower(lazydata) %in% c("true", "yes")
+  ) {
     copy_env_lazy(src = nsenv$.__NAMESPACE__.$lazydata, dest = pkgenv)
   }
 }
@@ -111,8 +107,9 @@ assign_depends <- function(package) {
 
   desc <- pkg_desc(ns_path(package))
   deps <- desc$get_deps()
-  depends <- unique(deps[deps$type == "Depends"
-                         & deps$package != "R",]$package)
+  depends <- unique(
+    deps[deps$type == "Depends" & deps$package != "R", ]$package
+  )
   if (length(depends) > 0L) pkgenv$.Depends <- depends
 }
 
@@ -140,7 +137,9 @@ assign_depends <- function(package) {
 pkg_env <- function(package) {
   name <- pkg_env_name(package)
 
-  if (!is_attached(package)) return(NULL)
+  if (!is_attached(package)) {
+    return(NULL)
+  }
 
   as.environment(name)
 }

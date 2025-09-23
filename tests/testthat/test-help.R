@@ -4,17 +4,17 @@ test_that("shim_help behaves the same as utils::help for non-devtools-loaded pac
   # stats wasn't loaded with devtools. There are many combinations of calling
   # with quotes and without; make sure they're the same both ways. Need to index
   # in using [1] to drop attributes for which there are unimportant differences.
-  expect_identical(shim_help(lm)[1],            utils::help(lm)[1])
-  expect_identical(shim_help(lm, stats)[1],     utils::help(lm, stats)[1])
-  expect_identical(shim_help(lm, 'stats')[1],   utils::help(lm, 'stats')[1])
-  expect_identical(shim_help('lm')[1],          utils::help('lm')[1])
-  expect_identical(shim_help('lm', stats)[1],   utils::help('lm', stats)[1])
+  expect_identical(shim_help(lm)[1], utils::help(lm)[1])
+  expect_identical(shim_help(lm, stats)[1], utils::help(lm, stats)[1])
+  expect_identical(shim_help(lm, 'stats')[1], utils::help(lm, 'stats')[1])
+  expect_identical(shim_help('lm')[1], utils::help('lm')[1])
+  expect_identical(shim_help('lm', stats)[1], utils::help('lm', stats)[1])
   expect_identical(shim_help('lm', 'stats')[1], utils::help('lm', 'stats')[1])
-  expect_identical(shim_help(, "stats")[1],     utils::help(, "stats")[1])
+  expect_identical(shim_help(, "stats")[1], utils::help(, "stats")[1])
 
   # Works for :: and ::: as well (#72)
-  expect_identical(shim_help("::")[1],          utils::help("::")[1])
-  expect_identical(shim_help(":::")[1],         utils::help(":::")[1])
+  expect_identical(shim_help("::")[1], utils::help("::")[1])
+  expect_identical(shim_help(":::")[1], utils::help(":::")[1])
 })
 
 test_that("shim_help behaves the same as utils::help for nonexistent objects", {
@@ -36,6 +36,7 @@ test_that("shim_help works with complex NULL `package = ` argument (#266)", {
 })
 
 test_that("shim_question behaves the same as utils::? for non-devtools-loaded packages", {
+  skip_on_cran()
   expect_identical(shim_question(lm)[1], utils::`?`(lm)[1])
   expect_identical(shim_question(stats::lm)[1], utils::`?`(stats::lm)[1])
   expect_identical(shim_question(lm(123))[1], utils::`?`(lm(123))[1])
@@ -62,7 +63,7 @@ test_that("shim_question behaves the same as utils::? for nonexistent objects", 
 
 test_that("show_help and shim_question files for devtools-loaded packages", {
   load_all(test_path('testHelp'))
-  on.exit(unload(test_path('testHelp')))
+  defer(unload(test_path('testHelp')))
 
   h1 <- shim_help("foofoo")
   expect_s3_class(h1, "dev_topic")
@@ -77,16 +78,13 @@ test_that("show_help and shim_question files for devtools-loaded packages", {
     expect_equal(title, "testHelp:foofoo.Rd")
   }
 
-  withr::with_options(
-    c(pager = pager_fun),
-    suppressMessages(
-      print(h1, type = 'text')
-    ))
+  local_options(pager = pager_fun)
+  suppressMessages(print(h1, type = 'text'))
 })
 
 test_that("shim_help and shim_questions works if topic moves", {
   load_all(test_path('testHelp'))
-  on.exit(unload(test_path('testHelp')))
+  defer(unload(test_path('testHelp')))
 
   path_man <- test_path("testHelp/man/")
   base_rd_path <- function(x) basename(x$path)
@@ -94,11 +92,14 @@ test_that("shim_help and shim_questions works if topic moves", {
   expect_equal(base_rd_path(shim_help("foofoo")), "foofoo.Rd")
   expect_equal(base_rd_path(shim_question("foofoo")), "foofoo.Rd")
 
-  fs::file_move(fs::path(path_man, "foofoo.Rd"), fs::path(path_man, "barbar.Rd"))
-  on.exit(
-    fs::file_move(fs::path(path_man, "barbar.Rd"), fs::path(path_man, "foofoo.Rd")),
-    add = TRUE
+  fs::file_move(
+    fs::path(path_man, "foofoo.Rd"),
+    fs::path(path_man, "barbar.Rd")
   )
+  defer(fs::file_move(
+    fs::path(path_man, "barbar.Rd"),
+    fs::path(path_man, "foofoo.Rd")
+  ))
 
   expect_equal(base_rd_path(shim_help("foofoo")), "barbar.Rd")
   expect_equal(base_rd_path(shim_question("foofoo")), "barbar.Rd")
@@ -106,7 +107,7 @@ test_that("shim_help and shim_questions works if topic moves", {
 
 test_that("dev_help works with package and function help with the same name", {
   load_all(test_path('testHelp'))
-  on.exit(unload(test_path('testHelp')))
+  defer(unload(test_path('testHelp')))
 
   h1 <- dev_help("testHelp")
   expect_identical(shim_question(testHelp::testHelp), h1)
@@ -139,7 +140,13 @@ test_that("unknown macros don't trigger warnings (#119)", {
 
 test_that("complex expressions are checked", {
   expect_snapshot({
-    (expect_error(shim_help({ foo; bar }), "must be a name"))
+    (expect_error(
+      shim_help({
+        foo
+        bar
+      }),
+      "must be a name"
+    ))
   })
 })
 

@@ -16,7 +16,8 @@ load_all(
   attach_testthat = uses_testthat(path),
   quiet = NULL,
   recompile = FALSE,
-  warn_conflicts = TRUE
+  warn_conflicts = TRUE,
+  debug = TRUE
 )
 
 is_loading(pkg = NULL)
@@ -64,6 +65,10 @@ define a function directly in the R console. This is frustrating to debug,
 as it feels like the changes you make to the package source aren't having
 the expected effect.}
 
+\item{debug}{If \code{TRUE} (the default), then the build
+runs without optimisation (\code{-O0}) and with debug symbols (\code{-g}). See
+\code{\link[pkgbuild:compile_dll]{pkgbuild::compile_dll()}} for details.}
+
 \item{pkg}{If supplied, \code{is_loading()} only returns \code{TRUE} if the
 package being loaded is \code{pkg}.}
 }
@@ -97,7 +102,7 @@ helpers are run during package loading.
 
 \code{is_loading()} returns \code{TRUE} when it is called while \code{load_all()}
 is running. This may be useful e.g. in \code{.onLoad} hooks.
-A package loaded with \code{load_all()} can be identified with with
+A package loaded with \code{load_all()} can be identified with
 \code{\link[=is_dev_package]{is_dev_package()}}.
 }
 \section{Differences to regular loading}{
@@ -122,6 +127,15 @@ listed as exports, use \code{export_all = FALSE}. This more closely simulates
 behavior when loading an installed package with \code{\link[=library]{library()}}, and can
 be useful for checking for missing exports.
 }
+}
+
+\section{Controlling the debug compiler flags}{
+\code{load_all()} delegates to \code{\link[pkgbuild:compile_dll]{pkgbuild::compile_dll()}} to perform the actual
+compilation, during which by default some debug compiler flags are
+appended. If you would like to produce an optimized build instead, you can
+opt out by either using \code{debug = FALSE}, setting the \code{pkg.build_extra_flags}
+option to \code{FALSE}, or setting the \code{PKG_BUILD_EXTRA_FLAGS} environment variable
+to \code{FALSE}. For further details see the Details section in \code{\link[pkgbuild:compile_dll]{pkgbuild::compile_dll()}}.
 }
 
 \examples{
