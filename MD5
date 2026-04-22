@@ -1,13 +1,13 @@
-c0bc5d24684b426a6d28e0578fb248ca *DESCRIPTION
+e3709b3864e41e468110f864706e805f *DESCRIPTION
 c9eda78d6d0b67d9df67d0b110693938 *LICENSE
 6e6e3c7e91956aee9c18f6e7fc0955d9 *NAMESPACE
-29b6a0e2ea1802f2cd1629608335bc63 *NEWS.md
+84f10803ee8dba79a3048bfeb2686be7 *NEWS.md
 a9cebe46e41ae836bd6d65f9aa5393b6 *R/aaa.R
 13f0d5c1a18205e3da019c306950599e *R/compilation-db.R
 73cae43a6fa8b1e017bf91b82ae9132a *R/dev-example.R
 3c233015ac877fd43c4775a0e009115b *R/dev-help.R
 0aabd3347d17643726fa9b205f052a4c *R/dev-meta.R
-453138a982a17558f8aa9dbeb663dabc *R/dev-topic.R
+0fb0502c3fad28cfb84906fdfa98d3ce *R/dev-topic.R
 2f9f204aa6392a2bb60c2bdeb1105cb0 *R/enc.R
 ec20041c1e398e82c95c105a8ea8b542 *R/file-cache.R
 a37296942d3237fc411927c2715dd184 *R/has_tests.R
@@ -82,7 +82,7 @@ a85767268aa03d548d58b0d26a186356 *tests/testthat/test-description.R
 9bdf2a3215e0777d65d7bbc2ed0a4c14 *tests/testthat/test-examples.R
 68b8dab49b36ee11bf2f30de68827d80 *tests/testthat/test-examples.Rd
 da42a294f6124f60d889c017419f9707 *tests/testthat/test-extraction.R
-8c0fc2b4a506b2ab88b6f104bb05c8f8 *tests/testthat/test-help.R
+c589589a0c26bd81b6e2e83a56d75689 *tests/testthat/test-help.R
 0ab0fb302a168d10effe7858f5987e8b *tests/testthat/test-imports.R
 132005f7a0c52a1f74f0f3177b1384c6 *tests/testthat/test-load-collate.R
 2fd929fb2e392775491e14ee1bfffbe1 *tests/testthat/test-load-hooks.R
